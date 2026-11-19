@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CardShop.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d53595d806cfb3721054f758e109879ab69ceec6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c995439cdea215e6395106cfd755934f862c4c1a")]
 [assembly: System.Reflection.AssemblyProductAttribute("CardShop.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CardShop.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

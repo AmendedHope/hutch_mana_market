@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "xYhkvEnzXcA=",
+  "dgSpecHash": "8Jteyz6btXg=",
   "success": true,
   "projectFilePath": "C:\\Users\\Steph\\OneDrive\\Desktop\\hutch_mana_market\\src\\CardShop.Core\\CardShop.Core.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\Steph\\.nuget\\packages\\microsoft.netcore.app.ref\\7.0.20\\microsoft.netcore.app.ref.7.0.20.nupkg.sha512",
-    "C:\\Users\\Steph\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\7.0.20\\microsoft.windowsdesktop.app.ref.7.0.20.nupkg.sha512",
-    "C:\\Users\\Steph\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\7.0.20\\microsoft.aspnetcore.app.ref.7.0.20.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }

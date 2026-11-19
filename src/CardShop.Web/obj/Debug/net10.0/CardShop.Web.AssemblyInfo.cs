@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("40dbb286-a2c3-48c5-b55b-8c4b67560e98")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("CardShop.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d53595d806cfb3721054f758e109879ab69ceec6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c995439cdea215e6395106cfd755934f862c4c1a")]
 [assembly: System.Reflection.AssemblyProductAttribute("CardShop.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CardShop.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

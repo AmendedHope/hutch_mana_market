@@ -9,4 +9,6 @@ public class Card
     public string SetName { get; set; } = "";
     public string Condition { get; set; } = "NM";
     public bool IsFoil { get; set; }
+    public int? CategoryId { get; set; }   // filled in by the first sync
+    public int? GroupId { get; set; }      // filled in by the first sync
 }

@@ -10,3 +10,6 @@ C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Core\obj\Debug\ne
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Core\obj\Debug\net10.0\refint\CardShop.Core.dll
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Core\obj\Debug\net10.0\CardShop.Core.pdb
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Core\obj\Debug\net10.0\ref\CardShop.Core.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Core.deps.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Core.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Core.pdb

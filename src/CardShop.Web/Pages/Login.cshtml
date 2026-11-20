@@ -1,0 +1,130 @@
+@page
+@model CardShop.Web.Pages.LoginModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Sign in - HutchisMuch Mana Shop</title>
+    <link rel="stylesheet" href="~/css/eggs.css" asp-append-version="true" />
+    <style>
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            color: #f5f3ff;
+            background: radial-gradient(1200px 800px at 10% 10%, #4c1d95 0, transparent 60%),
+                        radial-gradient(1000px 700px at 90% 90%, #831843 0, transparent 60%),
+                        #0f0a24;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+        .orbs span {
+            position: fixed; border-radius: 50%; filter: blur(50px); opacity: .45; pointer-events: none;
+            animation: float 16s ease-in-out infinite alternate;
+        }
+        .orbs span:nth-child(1) { width: 320px; height: 320px; background: #7c3aed; top: -80px; right: 12%; }
+        .orbs span:nth-child(2) { width: 260px; height: 260px; background: #db2777; bottom: -60px; left: 8%; animation-delay: -5s; }
+        .orbs span:nth-child(3) { width: 200px; height: 200px; background: #0ea5e9; top: 40%; left: 55%; animation-delay: -9s; }
+        @@keyframes float { from { transform: translate(0, 0); } to { transform: translate(40px, -30px); } }
+
+        .panel {
+            position: relative;
+            width: min(420px, calc(100vw - 2rem));
+            padding: 2.25rem 2rem 1.75rem;
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .07);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+        }
+        .brand { display: flex; align-items: center; gap: .6rem; font-weight: 700; letter-spacing: .02em; font-size: .95rem; opacity: .9; }
+        .mark {
+            width: 30px; height: 30px; border-radius: 9px;
+            background: conic-gradient(from 210deg, #a78bfa, #f472b6, #38bdf8, #34d399, #a78bfa);
+            box-shadow: 0 0 18px rgba(167, 139, 250, .6);
+        }
+        h1 { margin: 1.4rem 0 .3rem; font-size: 1.9rem; letter-spacing: -.02em; }
+        .lead { margin: 0 0 1.5rem; color: #c4b5fd; }
+        label { display: block; margin: 0 0 .35rem; font-size: .85rem; color: #ddd6fe; }
+        .field { margin-bottom: 1rem; }
+        input[type=text], input[type=password] {
+            width: 100%; padding: .75rem .9rem; font-size: 1rem; color: #fff;
+            border: 1px solid rgba(255, 255, 255, .18); border-radius: 12px;
+            background: rgba(15, 10, 36, .55); outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(167, 139, 250, .3); }
+        .row { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 1.25rem; font-size: .9rem; color: #ddd6fe; }
+        .row input { width: 16px; height: 16px; accent-color: #a78bfa; }
+        button {
+            width: 100%; padding: .85rem; font-size: 1rem; font-weight: 700; color: #fff; cursor: pointer;
+            border: 0; border-radius: 12px;
+            background: linear-gradient(135deg, #7c3aed, #db2777);
+            box-shadow: 0 10px 30px rgba(219, 39, 119, .35);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgba(219, 39, 119, .45); }
+        .alert {
+            margin-bottom: 1rem; padding: .7rem .9rem; border-radius: 12px; font-size: .9rem;
+            background: rgba(244, 63, 94, .15); border: 1px solid rgba(244, 63, 94, .4); color: #fecdd3;
+        }
+        .setup { padding: 1rem; border-radius: 12px; background: rgba(15, 10, 36, .55); border: 1px solid rgba(255, 255, 255, .14); font-size: .9rem; line-height: 1.5; }
+        .setup code { display: block; margin: .6rem 0; padding: .6rem .7rem; border-radius: 8px; background: #000; color: #a7f3d0; font-size: .8rem; overflow-x: auto; white-space: nowrap; }
+        .foot { margin: 1.4rem 0 0; display: flex; align-items: center; gap: .45rem; justify-content: center; font-size: .8rem; color: #a78bfa; }
+        @@media (prefers-reduced-motion: reduce) { .orbs span { animation: none; } button { transition: none; } }
+    </style>
+</head>
+<body>
+    <div class="orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <main class="panel">
+        <div class="brand"><span class="mark" aria-hidden="true"></span> HutchisMuch Mana Shop</div>
+
+        <h1>Welcome back</h1>
+        <p class="lead">Sign in to open the vault.</p>
+
+        @if (!Model.Configured)
+        {
+            <div class="setup">
+                <strong>No owner account yet.</strong> The shop stays locked until you create one.
+                In a terminal in the project folder, run:
+                <code>dotnet run --project src/CardShop.Web -- set-password</code>
+                Choose a username and password, then refresh this page.
+            </div>
+        }
+        else
+        {
+            @if (Model.Error is not null)
+            {
+                <div class="alert" role="alert">@Model.Error</div>
+            }
+
+            <form method="post" autocomplete="on">
+                <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                <div class="field">
+                    <label for="Username">Username</label>
+                    <input type="text" id="Username" name="Username" value="@Model.Username" autocomplete="username" required autofocus />
+                </div>
+                <div class="field">
+                    <label for="Password">Password</label>
+                    <input type="password" id="Password" name="Password" autocomplete="current-password" required />
+                </div>
+                <label class="row"><input type="checkbox" name="RememberMe" value="true" /> Keep me signed in for 14 days</label>
+                <button type="submit">Sign in</button>
+            </form>
+        }
+
+        <p class="foot">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Private shop tools. Authorized staff only.
+        </p>
+    </main>
+
+    <script src="~/js/eggs.js" asp-append-version="true"></script>
+</body>
+</html>

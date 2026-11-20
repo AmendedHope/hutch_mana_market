@@ -14,3 +14,6 @@ C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Infrastructure\ob
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Infrastructure\obj\Debug\net10.0\refint\CardShop.Infrastructure.dll
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Infrastructure\obj\Debug\net10.0\CardShop.Infrastructure.pdb
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Infrastructure\obj\Debug\net10.0\ref\CardShop.Infrastructure.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Infrastructure.deps.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Infrastructure.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Infrastructure.pdb

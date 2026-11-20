@@ -1,0 +1,145 @@
+@page
+@model CardShop.Web.Pages.CardsModel
+@{
+    ViewData["Title"] = "Cards";
+}
+
+<style>
+    .filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
+    .filters input[type=search] { flex: 1 1 260px; min-width: 200px; }
+    .filters input, .filters select, .filters button { padding: .4rem .6rem; }
+    .summary { margin: 0 0 1rem; opacity: .8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
+    .tile { border: 1px solid rgba(128,128,128,.35); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+    .art { position: relative; aspect-ratio: 5 / 7; background: rgba(128,128,128,.12); display: flex; align-items: center; justify-content: center; }
+    .art::before { content: "No image"; position: absolute; opacity: .5; font-size: .85rem; }
+    .art img { position: relative; width: 100%; height: 100%; object-fit: contain; }
+    .badge { position: absolute; top: 6px; padding: 2px 7px; border-radius: 10px; font-size: .75rem; font-weight: 600; background: rgba(0,0,0,.75); color: #fff; }
+    .badge.qty { right: 6px; }
+    .badge.foil { left: 6px; background: linear-gradient(135deg, #6a5acd, #d946ef); }
+    .meta { padding: .5rem .6rem .7rem; font-size: .85rem; }
+    .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub { opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prices { margin-top: .4rem; display: flex; flex-wrap: wrap; gap: .1rem .6rem; }
+    .diff.above { color: #c2410c; }
+    .diff.below { color: #15803d; }
+    .muted { opacity: .6; }
+    .pager { display: flex; gap: 1rem; align-items: center; justify-content: center; margin: 1.5rem 0; }
+</style>
+
+<h1>Cards</h1>
+
+<form method="get" class="filters">
+    <input type="search" name="q" value="@Model.Q" placeholder="Search name, set, or product ID" />
+
+    <select name="game">
+        <option value="">All games</option>
+        @foreach (var g in Model.Games)
+        {
+            <option value="@g" selected="@(g == Model.Game)">@g</option>
+        }
+    </select>
+
+    <select name="setName">
+        <option value="">All sets</option>
+        @foreach (var s in Model.Sets)
+        {
+            <option value="@s" selected="@(s == Model.SetName)">@s</option>
+        }
+    </select>
+
+    <select name="condition">
+        <option value="">Any condition</option>
+        @foreach (var c in Model.Conditions)
+        {
+            <option value="@c" selected="@(c == Model.Condition)">@c</option>
+        }
+    </select>
+
+    <select name="foil">
+        <option value="">Foil or not</option>
+        <option value="yes" selected="@(Model.Foil == "yes")">Foil only</option>
+        <option value="no" selected="@(Model.Foil == "no")">Non-foil only</option>
+    </select>
+
+    <label><input type="checkbox" name="inStock" value="true" checked="@Model.InStock" /> In stock only</label>
+
+    <select name="sort">
+        <option value="name" selected="@(Model.Sort == "name")">Sort: name</option>
+        <option value="set" selected="@(Model.Sort == "set")">Sort: set</option>
+        <option value="price" selected="@(Model.Sort == "price")">Sort: market price</option>
+        <option value="value" selected="@(Model.Sort == "value")">Sort: total value</option>
+        <option value="qty" selected="@(Model.Sort == "qty")">Sort: quantity</option>
+    </select>
+
+    <button type="submit">Apply</button>
+    <a href="/Cards">Clear</a>
+</form>
+
+<p class="summary">
+    @Model.Total.ToString("N0") cards &middot; @Model.UnitsInView.ToString("N0") units &middot;
+    market value $@Model.ValueInView.ToString("N2")
+</p>
+
+@if (Model.Tiles.Count == 0)
+{
+    <p>No cards match. Try fewer filters, or import your inventory on the <a href="/Import">Import</a> page.</p>
+}
+
+<div class="grid">
+    @foreach (var t in Model.Tiles)
+    {
+        var img = CardShop.Web.Pages.CardsModel.ImageUrl(t.ProductId);
+        string? diffText = null;
+        var diffClass = "";
+        if (t.Market is { } mk && mk > 0 && t.YourPrice > 0)
+        {
+            var pct = (t.YourPrice - mk) / mk * 100;
+            diffText = (pct >= 0 ? "+" : "") + pct.ToString("0.#") + "% vs market";
+            diffClass = pct > 0 ? "above" : pct < 0 ? "below" : "";
+        }
+
+        <div class="tile">
+            <div class="art">
+                @if (img is not null)
+                {
+                    <img src="@img" alt="@t.Name" loading="lazy" onerror="this.style.display='none'" />
+                }
+                @if (t.IsFoil)
+                {
+                    <span class="badge foil">Foil</span>
+                }
+                <span class="badge qty">&times;@t.Qty</span>
+            </div>
+            <div class="meta">
+                <div class="name" title="@t.Name">@t.Name</div>
+                <div class="sub" title="@t.SetName">@t.SetName</div>
+                <div class="sub">@t.Condition</div>
+                <div class="prices">
+                    <span>Yours <strong>$@t.YourPrice.ToString("N2")</strong></span>
+                    @if (t.Market is { } m)
+                    {
+                        <span>Market <strong>$@m.ToString("N2")</strong></span>
+                        @if (diffText is not null)
+                        {
+                            <span class="diff @diffClass">@diffText</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="muted">No market price yet</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <div class="pager">
+        @if (Model.PageNo > 1) { <a href="@Model.PageUrl(Model.PageNo - 1)">&larr; Previous</a> }
+        <span>Page @Model.PageNo of @Model.TotalPages</span>
+        @if (Model.PageNo < Model.TotalPages) { <a href="@Model.PageUrl(Model.PageNo + 1)">Next &rarr;</a> }
+    </div>
+}

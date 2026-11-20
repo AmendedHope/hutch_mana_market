@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 
 namespace CardShop.Infrastructure;
+
 public class ShopDbContext(DbContextOptions<ShopDbContext> options) : DbContext(options)
 {
     public DbSet<Card> Cards => Set<Card>();
@@ -11,12 +12,15 @@ public class ShopDbContext(DbContextOptions<ShopDbContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<Card>().HasIndex(c => c.TcgPlayerId).IsUnique();
+        b.Entity<Card>().HasIndex(c => new { c.TcgPlayerId, c.Condition, c.IsFoil }).IsUnique();
 
-        // This index makes "latest price per card" and history queries fast
-        b.Entity<PriceSnapshot>().HasIndex(s => new { s.CardId, s.CapturedAt });
-
+        // one snapshot per card per daily update; also speeds up history queries
+        b.Entity<PriceSnapshot>().HasIndex(s => new { s.CardId, s.DataDate }).IsUnique();
         b.Entity<PriceSnapshot>().Property(s => s.Market).HasPrecision(10, 2);
+        b.Entity<PriceSnapshot>().Property(s => s.Low).HasPrecision(10, 2);
+        b.Entity<PriceSnapshot>().Property(s => s.Mid).HasPrecision(10, 2);
+        b.Entity<PriceSnapshot>().Property(s => s.High).HasPrecision(10, 2);
+
         b.Entity<InventoryItem>().Property(i => i.YourPrice).HasPrecision(10, 2);
         b.Entity<InventoryItem>().Property(i => i.CostBasis).HasPrecision(10, 2);
     }

@@ -52,6 +52,9 @@ namespace CardShop.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Condition")
                         .IsRequired()
                         .HasColumnType("text");
@@ -59,6 +62,9 @@ namespace CardShop.Infrastructure.Migrations
                     b.Property<string>("Game")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int?>("GroupId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsFoil")
                         .HasColumnType("boolean");
@@ -77,7 +83,7 @@ namespace CardShop.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TcgPlayerId")
+                    b.HasIndex("TcgPlayerId", "Condition", "IsFoil")
                         .IsUnique();
 
                     b.ToTable("Cards");
@@ -126,16 +132,33 @@ namespace CardShop.Infrastructure.Migrations
                     b.Property<int>("CardId")
                         .HasColumnType("integer");
 
+                    b.Property<DateOnly>("DataDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("High")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
                     b.Property<decimal?>("Low")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<decimal>("Market")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<decimal?>("Mid")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("SubType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId", "CapturedAt");
+                    b.HasIndex("CardId", "DataDate")
+                        .IsUnique();
 
                     b.ToTable("PriceSnapshots");
                 });

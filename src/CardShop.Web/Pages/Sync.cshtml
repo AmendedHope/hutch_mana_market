@@ -1,0 +1,30 @@
+@page
+@model CardShop.Web.Pages.SyncModel
+@{
+    ViewData["Title"] = "Sync prices";
+}
+
+<h1>Sync prices</h1>
+<p>Current data day: <strong>@Model.DataDate</strong>. TCGCSV publishes new prices once a day.</p>
+
+<form method="post">
+    <button type="submit">Sync now</button>
+</form>
+<p><small>The first run looks up each card's set in the catalog and can take a few minutes. Leave this page open.</small></p>
+
+@if (Model.Result is not null)
+{
+    <p>Prices saved: <strong>@Model.Result.PricesSaved</strong>,
+       changes over threshold: <strong>@Model.Result.ChangesFound</strong></p>
+
+    @if (Model.Result.Notes.Count > 0)
+    {
+        <h3>Notes (@Model.Result.Notes.Count)</h3>
+        <ul>
+            @foreach (var n in Model.Result.Notes.Take(100))
+            {
+                <li>@n</li>
+            }
+        </ul>
+    }
+}

@@ -197,3 +197,14 @@ C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\bin\Debug\net
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\bin\Debug\net10.0\RBush.dll
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\bin\Debug\net10.0\SixLabors.Fonts.dll
 C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\bin\Debug\net10.0\System.IO.Packaging.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\appsettings.Development.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\appsettings.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.staticwebassets.runtime.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.staticwebassets.endpoints.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.exe
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.deps.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.runtimeconfig.json
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.dll
+C:\Users\Steph\AppData\Local\Temp\claude\fe3bb634a8b1bbe7\a69a2899-02ee-4456-9209-c96aeca25219\scratchpad\buildcheck\CardShop.Web.pdb
+C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\obj\Debug\net10.0\compressed\qmf3r95juf-{0}-o819lydsrj-o819lydsrj.gz
+C:\Users\Steph\OneDrive\Desktop\hutch_mana_market\src\CardShop.Web\obj\Debug\net10.0\compressed\md8qh7oavd-{0}-v81p1l9fbk-v81p1l9fbk.gz

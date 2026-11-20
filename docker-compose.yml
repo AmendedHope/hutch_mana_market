@@ -1,15 +1,20 @@
 # HutchisMuch Mana Shop: app + PostgreSQL + Caddy (automatic HTTPS).
 # Settings come from the .env file next to this one (setup-server.sh creates it).
+#
+# Database: either the built-in PostgreSQL below (COMPOSE_PROFILES=localdb in .env),
+# or a DigitalOcean Managed Database (leave COMPOSE_PROFILES unset). Either way the
+# app's connection string is DATABASE_CONNECTION in .env.
 name: manashop
 
 services:
   db:
     image: postgres:17
+    profiles: [localdb]          # only runs when COMPOSE_PROFILES=localdb
     restart: unless-stopped
     environment:
       POSTGRES_DB: cardshop
       POSTGRES_USER: cardshop
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -26,8 +31,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+        required: false          # not running when you use a managed database
     environment:
-      ConnectionStrings__Default: "Host=db;Database=cardshop;Username=cardshop;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Default: ${DATABASE_CONNECTION:?Set DATABASE_CONNECTION in .env}
       Auth__Username: ${AUTH_USERNAME:?Set AUTH_USERNAME in .env}
       Auth__PasswordHash: ${AUTH_PASSWORD_HASH:?Set AUTH_PASSWORD_HASH in .env}
       Discord__WebhookUrl: ${DISCORD_WEBHOOK_URL:-}

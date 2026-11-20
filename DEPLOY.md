@@ -75,8 +75,8 @@ It will:
 1. install updates, Docker and a firewall that allows only SSH, HTTP and HTTPS
 2. add swap space so the small droplet can build the app
 3. ask for your domain, the two lines from step 4, your time zone and an optional Discord webhook
-4. create a random database password and save everything to `.env` (readable only by root)
-5. build and start the shop
+4. ask which database to use: press **Enter** for the built-in one, or enter your **Managed Database** details (see below)
+5. save everything to `.env` (readable only by root), then build and start the shop
 
 The first build takes 5–10 minutes.
 
@@ -88,6 +88,32 @@ Open `https://your-domain`. You should land on the sign-in page. Sign in, then:
 2. Run **Sync now** on `/Sync` to load market prices
 
 After that, prices sync automatically in the background.
+
+### Using a DigitalOcean Managed Database (optional)
+
+By default the shop runs its own PostgreSQL on the droplet for free. A Managed Database costs extra, but DigitalOcean handles backups, updates and failover for you.
+
+When the setup script asks for the **Managed database host**, enter the details from the database's **Connection Details** panel in DigitalOcean:
+
+| Prompt | Where to find it |
+|---|---|
+| Host | `host`. If the droplet is in the same region, choose **VPC network** in the panel and use that private host instead: it's faster and never crosses the internet. |
+| Port | `port` (usually 25060) |
+| Database | `database` (e.g. `defaultdb`) |
+| Username | `username` (e.g. `doadmin`) |
+| Password | `password`. It's hidden as you type or paste. |
+
+The connection is always encrypted (SSL). The app creates its tables on first start.
+
+**Lock the database down:** in DigitalOcean, open the database → **Settings** → **Trusted sources**, and add your droplet. After that, only your droplet can connect.
+
+**Already ran the setup script with the built-in database?** Edit `.env` (`nano .env`): delete the `COMPOSE_PROFILES=localdb` line and replace the `DATABASE_CONNECTION=` line with:
+
+```
+DATABASE_CONNECTION='Host=YOUR_HOST;Port=25060;Database=defaultdb;Username=doadmin;Password=YOUR_PASSWORD;SSL Mode=Require'
+```
+
+Keep the single quotes. Then run `docker compose up -d --remove-orphans`.
 
 ---
 
@@ -149,6 +175,8 @@ These live in `.env` on the droplet and are passed to the containers by `docker-
 |---|---|
 | `DOMAIN` | Your domain, used by Caddy for HTTPS |
 | `AUTH_USERNAME`, `AUTH_PASSWORD_HASH` | Owner sign-in (from `set-password --print`) |
-| `POSTGRES_PASSWORD` | Database password, generated randomly by the setup script. Changing it after the first start won't update the database, so leave it alone. |
+| `DATABASE_CONNECTION` | How the app reaches its database: the built-in one or your Managed Database. Keep it in single quotes. |
+| `COMPOSE_PROFILES` | `localdb` when using the built-in database. Leave it out for a Managed Database. |
+| `POSTGRES_PASSWORD` | Built-in database only. Generated randomly by the setup script. Changing it after the first start won't update the database, so leave it alone. |
 | `TZ` | Time zone for the home-page greeting, e.g. `America/Chicago` |
 | `DISCORD_WEBHOOK_URL` | Optional price-alert notifications |

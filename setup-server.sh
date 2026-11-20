@@ -47,19 +47,53 @@ if [ ! -f .env ]; then
         echo "Domain, username and password hash are all required. Run this again."; exit 1
     fi
 
+    echo
+    echo "==> Database"
+    echo "Press Enter to use the built-in database on this droplet (free),"
+    echo "or type the host of your DigitalOcean Managed Database to use that instead."
+    read -rp "Managed database host [built-in]: " DB_HOST
+    DB_HOST="$(echo "$DB_HOST" | tr -d '[:space:]')"
+
     umask 077
+    if [ -z "$DB_HOST" ]; then
+        PG_PASS="$(openssl rand -hex 24)"
+        DB_BLOCK="COMPOSE_PROFILES=localdb
+POSTGRES_PASSWORD=$PG_PASS
+DATABASE_CONNECTION='Host=db;Database=cardshop;Username=cardshop;Password=$PG_PASS'"
+    else
+        read -rp "Port [25060]: " DB_PORT
+        read -rp "Database [defaultdb]: " DB_NAME
+        read -rp "Username [doadmin]: " DB_USER
+        read -rsp "Password (hidden as you type): " DB_PASS; echo
+        DB_PORT="$(echo "${DB_PORT:-25060}" | tr -d '[:space:]')"
+        DB_NAME="$(echo "${DB_NAME:-defaultdb}" | tr -d '[:space:]')"
+        DB_USER="$(echo "${DB_USER:-doadmin}" | tr -d '[:space:]')"
+        DB_PASS="$(echo "$DB_PASS" | tr -d '[:space:]')"
+        if [ -z "$DB_PASS" ]; then echo "The database password is required. Run this again."; exit 1; fi
+        case "$DB_PASS" in *\'*|*\;*) echo "That password contains ' or ; which can't be used here. Reset it in DigitalOcean and try again."; exit 1;; esac
+        DB_BLOCK="DATABASE_CONNECTION='Host=$DB_HOST;Port=$DB_PORT;Database=$DB_NAME;Username=$DB_USER;Password=$DB_PASS;SSL Mode=Require'"
+    fi
+
     cat > .env <<EOF
 DOMAIN=$DOMAIN
 AUTH_USERNAME=$AUTH_USERNAME
 AUTH_PASSWORD_HASH=$AUTH_PASSWORD_HASH
-POSTGRES_PASSWORD=$(openssl rand -hex 24)
 TZ=${TZ_IN:-UTC}
 DISCORD_WEBHOOK_URL=$DISCORD
+$DB_BLOCK
 EOF
     chmod 600 .env
     echo "Saved settings to .env (only root can read it)."
 else
     echo "==> Keeping existing .env"
+    # .env files from before the managed-database option: keep using the built-in database
+    if ! grep -q '^DATABASE_CONNECTION=' .env; then
+        PG_PASS="$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)"
+        if [ -n "$PG_PASS" ]; then
+            printf "COMPOSE_PROFILES=localdb\nDATABASE_CONNECTION='Host=db;Database=cardshop;Username=cardshop;Password=%s'\n" "$PG_PASS" >> .env
+            echo "    (updated .env for the new database setting; still using the built-in database)"
+        fi
+    fi
 fi
 
 echo

@@ -1,0 +1,29 @@
+@page
+@model CardShop.Web.Pages.ImportModel
+@{
+    ViewData["Title"] = "Import inventory";
+}
+
+<h1>Import inventory</h1>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="Upload" accept=".csv,.xlsx" required />
+    <button type="submit">Import</button>
+</form>
+
+@if (Model.Result is not null)
+{
+    <p>Cards added: <strong>@Model.Result.CardsAdded</strong>,
+       inventory rows updated: <strong>@Model.Result.InventoryUpdated</strong></p>
+
+    @if (Model.Result.Errors.Count > 0)
+    {
+        <h3>Skipped rows (@Model.Result.Errors.Count)</h3>
+        <ul>
+            @foreach (var e in Model.Result.Errors.Take(50))
+            {
+                <li>@e</li>
+            }
+        </ul>
+    }
+}

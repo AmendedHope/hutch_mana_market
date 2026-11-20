@@ -1,6 +1,18 @@
+using CardShop.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<ShopDbContext>(o =>
+    o.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+ builder.Services.AddScoped<InventoryImporter>();
+
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

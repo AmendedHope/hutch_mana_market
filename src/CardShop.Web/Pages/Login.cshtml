@@ -92,9 +92,18 @@
         {
             <div class="setup">
                 <strong>No owner account yet.</strong> The shop stays locked until you create one.
-                In a terminal in the project folder, run:
-                <code>dotnet run --project src/CardShop.Web -- set-password</code>
-                Choose a username and password, then refresh this page.
+                @if (Model.IsLocalDev)
+                {
+                    <text>In a terminal in the project folder, run:</text>
+                    <code>dotnet run --project src/CardShop.Web -- set-password</code>
+                    <text>Choose a username and password, then refresh this page.</text>
+                }
+                else
+                {
+                    <text>On your own computer, in the project folder, run:</text>
+                    <code>dotnet run --project src/CardShop.Web -- set-password --print</code>
+                    <text>Add the two settings it prints to this server's environment variables, then restart the app.</text>
+                }
             </div>
         }
         else

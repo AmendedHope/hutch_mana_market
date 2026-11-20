@@ -41,13 +41,11 @@ public static class OwnerAccount
     public static string Stamp(IConfiguration c) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(c["Auth:PasswordHash"] ?? "")))[..16];
 
-    /// <summary>Console flow for: dotnet run --project src/CardShop.Web -- set-password</summary>
-    public static int RunSetup()
+    /// <summary>Console flow for: dotnet run --project src/CardShop.Web -- set-password [--print]
+    /// Without --print it saves to this computer's user secrets (local development).
+    /// With --print it only prints the two settings to add on a hosting server.</summary>
+    public static int RunSetup(bool printOnly)
     {
-        var id = typeof(OwnerAccount).Assembly.GetCustomAttribute<UserSecretsIdAttribute>()?.UserSecretsId;
-        if (id is null) { Console.Error.WriteLine("This project has no UserSecretsId."); return 1; }
-        var path = PathHelper.GetSecretsPathFromSecretsId(id);
-
         Console.WriteLine();
         Console.WriteLine("Set up the owner sign-in for HutchisMuch Mana Shop");
         Console.WriteLine("---------------------------------------------------");
@@ -62,6 +60,24 @@ public static class OwnerAccount
         if (pw.Length < MinPasswordLength) { Console.Error.WriteLine($"Password must be at least {MinPasswordLength} characters."); return 1; }
         if (ReadSecret("Type it again: ") != pw) { Console.Error.WriteLine("The passwords didn't match. Nothing was changed."); return 1; }
 
+        var hash = Hasher.HashPassword(username, pw);
+
+        if (printOnly)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Add these two settings (environment variables) on your hosting server:");
+            Console.WriteLine();
+            Console.WriteLine($"  Auth__Username={username}");
+            Console.WriteLine($"  Auth__PasswordHash={hash}");
+            Console.WriteLine();
+            Console.WriteLine("The hash is not your password, but keep it private anyway. Nothing was saved on this computer.");
+            return 0;
+        }
+
+        var id = typeof(OwnerAccount).Assembly.GetCustomAttribute<UserSecretsIdAttribute>()?.UserSecretsId;
+        if (id is null) { Console.Error.WriteLine("This project has no UserSecretsId."); return 1; }
+        var path = PathHelper.GetSecretsPathFromSecretsId(id);
+
         JsonObject root = new();
         if (File.Exists(path))
         {
@@ -70,7 +86,7 @@ public static class OwnerAccount
         }
         root.Remove("Auth"); // drop any nested section so the flat keys below win
         root["Auth:Username"] = username;
-        root["Auth:PasswordHash"] = Hasher.HashPassword(username, pw);
+        root["Auth:PasswordHash"] = hash;
 
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));

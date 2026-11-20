@@ -1,0 +1,71 @@
+# HutchisMuch Mana Shop: app + PostgreSQL + Caddy (automatic HTTPS).
+# Settings come from the .env file next to this one (setup-server.sh creates it).
+name: manashop
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardshop
+      POSTGRES_USER: cardshop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardshop -d cardshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [shop]
+    # no ports: the database is only reachable by the app, never from the internet
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Default: "Host=db;Database=cardshop;Username=cardshop;Password=${POSTGRES_PASSWORD}"
+      Auth__Username: ${AUTH_USERNAME:?Set AUTH_USERNAME in .env}
+      Auth__PasswordHash: ${AUTH_PASSWORD_HASH:?Set AUTH_PASSWORD_HASH in .env}
+      Discord__WebhookUrl: ${DISCORD_WEBHOOK_URL:-}
+      DataProtection__KeysPath: /keys
+      Database__MigrateOnStartup: "true"
+      Hosting__TrustedProxies: 172.28.0.10   # Caddy's fixed address below
+      TZ: ${TZ:-UTC}
+    volumes:
+      - keys:/keys
+    networks: [shop]
+    # no ports: only Caddy talks to the app
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data        # HTTPS certificates
+      - caddy-config:/config
+    networks:
+      shop:
+        ipv4_address: 172.28.0.10
+
+networks:
+  shop:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+
+volumes:
+  db-data:
+  keys:
+  caddy-data:
+  caddy-config:

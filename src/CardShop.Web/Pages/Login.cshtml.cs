@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace CardShop.Web.Pages;
 
 [AllowAnonymous]
-public class LoginModel(IConfiguration config, ILogger<LoginModel> log) : PageModel
+public class LoginModel(IConfiguration config, IWebHostEnvironment env, ILogger<LoginModel> log) : PageModel
 {
     [BindProperty] public string Username { get; set; } = "";
     [BindProperty] public string Password { get; set; } = "";
@@ -19,6 +19,7 @@ public class LoginModel(IConfiguration config, ILogger<LoginModel> log) : PageMo
 
     public string? Error { get; set; }
     public bool Configured => OwnerAccount.IsConfigured(config);
+    public bool IsLocalDev => env.IsDevelopment();
 
     public IActionResult OnGet()
     {

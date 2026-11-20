@@ -1,0 +1,5 @@
+# Shell scripts and Docker files run on Linux, so always store them with LF line endings.
+*.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf
+docker-compose.yml text eol=lf

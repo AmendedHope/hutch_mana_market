@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+publish/
+*.binlog
+
+# IDE / user files
+.vs/
+.vscode/*
+!.vscode/settings.json
+*.user
+*.suo
+
+# Secrets and local settings (passwords, connection strings, keys)
+appsettings.*.local.json
+.env
+*.pfx
+DataProtection-Keys/
+
+# Generated database scripts
+deploy.sql

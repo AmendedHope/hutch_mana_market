@@ -330,3 +330,163 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();
+
+// ---------- The Nido dance ----------
+// Every so often, a Nidoking card and a Nidoqueen card waddle in from opposite sides, meet in the
+// middle, their artwork pops up out of the cards, they get cuddly, then they head off together.
+// Card art loads from TCGplayer's image server, like the Cards page. To see it right away, open the
+// browser console (F12) and type:  nidoDance()
+(function () {
+    'use strict';
+
+    var LAST_KEY = 'nido.lastDance';
+    var MIN_GAP_MS = 3 * 60 * 60 * 1000;  // at most once every 3 hours
+    var CHANCE = 0.2;                      // and only on about 1 in 5 page views
+
+    var CARDS = {
+        king:  { img: 'https://tcgplayer-cdn.tcgplayer.com/product/42351_400w.jpg', name: 'Nidoking' },  // Base Set 11/102
+        queen: { img: 'https://tcgplayer-cdn.tcgplayer.com/product/45133_400w.jpg', name: 'Nidoqueen' }  // Jungle 7/64
+    };
+    var KING_LINES  = ['Best tag team in the binder.', 'Mint condition, just like you.', 'You complete my set.', 'Holo-graphically yours.'];
+    var QUEEN_LINES = ['Boyfriends: +20 damage for every Nidoking in play!', 'My favorite pull, ever.', 'Never trading you.', 'Sleeve me up, handsome.'];
+
+    var running = false;
+    var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+    function rand(min, max) { return min + Math.random() * (max - min); }
+    function after(ms, fn) { return setTimeout(fn, ms); }
+
+    function preload(urls, done) {
+        var left = urls.length, failed = false;
+        urls.forEach(function (u) {
+            var im = new Image();
+            im.onload = function () { if (--left === 0 && !failed) done(); };
+            im.onerror = function () { failed = true; };
+            im.src = u;
+        });
+    }
+
+    function makeCard(kind) {
+        var el = document.createElement('div');
+        el.className = 'nido ' + kind;
+        el.style.setProperty('--img', 'url("' + CARDS[kind].img + '")');
+        el.innerHTML =
+            '<div class="nido-body">' +
+                '<div class="nido-face"></div>' +
+                '<div class="nido-hole"></div>' +
+                '<div class="nido-pop"><div class="nido-art"></div></div>' +
+                '<div class="nido-say"></div>' +
+            '</div>';
+        return el;
+    }
+
+    function heart(stage, x, y) {
+        var h = document.createElement('span');
+        h.className = 'nido-heart';
+        h.textContent = pick(['💜', '💗', '💕', '✨']);
+        h.style.left = (x + rand(-30, 30)) + 'px';
+        h.style.bottom = y + 'px';
+        h.style.setProperty('--drift', rand(-40, 40).toFixed(0) + 'px');
+        h.style.fontSize = rand(16, 26).toFixed(0) + 'px';
+        stage.appendChild(h);
+        after(2200, function () { h.remove(); });
+    }
+
+    function nidoDance() {
+        if (running || reduced) return;
+        running = true;
+        try { localStorage.setItem(LAST_KEY, String(Date.now())); } catch (e) { }
+
+        preload([CARDS.king.img, CARDS.queen.img], function () {
+            var W = window.innerWidth;
+            var cardW = W < 600 ? 92 : 120;
+            var gap = 18;
+
+            var stage = document.createElement('div');
+            stage.className = 'nido-stage';
+            stage.style.setProperty('--card-w', cardW + 'px');
+            stage.setAttribute('aria-hidden', 'true');
+            var king = makeCard('king'), queen = makeCard('queen');
+            stage.appendChild(king);
+            stage.appendChild(queen);
+            document.body.appendChild(stage);
+
+            function moveTo(el, x, ms) {
+                el.style.transitionDuration = (ms || 0) + 'ms';
+                el.style.transform = 'translateX(' + Math.round(x) + 'px)';
+            }
+            function say(el, text, ms) {
+                var b = el.querySelector('.nido-say');
+                b.textContent = text;
+                b.classList.add('show');
+                after(ms, function () { b.classList.remove('show'); });
+            }
+
+            // start off-screen
+            moveTo(king, -cardW - 40, 0);
+            moveTo(queen, W + 40, 0);
+            void stage.offsetWidth;
+
+            var meetKing = W / 2 - cardW - gap / 2;
+            var meetQueen = W / 2 + gap / 2;
+            var heartsX = W / 2;
+            var heartsY = cardW * 1.37 + 60;
+
+            // 1. waddle in
+            after(60, function () {
+                king.classList.add('walking'); queen.classList.add('walking');
+                moveTo(king, meetKing, 3200); moveTo(queen, meetQueen, 3200);
+            });
+            // 2. stop, little hop
+            after(3300, function () {
+                king.classList.remove('walking'); queen.classList.remove('walking');
+                king.classList.add('hop'); queen.classList.add('hop');
+            });
+            // 3. artwork pops up out of the cards
+            after(3900, function () { king.classList.add('popped'); queen.classList.add('popped'); });
+            // 4. lean in and get cuddly
+            after(4700, function () {
+                king.classList.add('lean'); queen.classList.add('lean');
+                king.classList.add('nuzzle'); queen.classList.add('nuzzle');
+                var n = 0, t = setInterval(function () { heart(stage, heartsX, heartsY); if (++n >= 14) clearInterval(t); }, 220);
+            });
+            after(5200, function () { say(queen, pick(QUEEN_LINES), 2300); });
+            after(7700, function () { say(king, pick(KING_LINES), 2300); });
+            // 5. back into their cards
+            after(10300, function () {
+                king.classList.remove('nuzzle', 'lean'); queen.classList.remove('nuzzle', 'lean');
+                after(250, function () { king.classList.remove('popped'); queen.classList.remove('popped'); });
+            });
+            // 6. leave together, side by side
+            after(11300, function () {
+                king.classList.remove('hop'); queen.classList.remove('hop');
+                king.classList.add('walking'); queen.classList.add('walking');
+                moveTo(queen, W + 60 + cardW, 3800);
+                moveTo(king, W + 60 - gap, 3800 + 250);
+                heart(stage, heartsX + 80, cardW * 1.37 + 30);
+            });
+            after(15600, function () { stage.remove(); running = false; });
+        });
+
+        // if the images can't load (offline), quietly give up
+        after(8000, function () { if (!document.querySelector('.nido-stage')) running = false; });
+    }
+
+    window.nidoDance = nidoDance;
+
+    function maybeSchedule() {
+        if (reduced) return;
+        var last = 0;
+        try { last = parseInt(localStorage.getItem(LAST_KEY) || '0', 10) || 0; } catch (e) { }
+        if (Date.now() - last < MIN_GAP_MS) return;
+        if (Math.random() > CHANCE) return;
+        after(rand(20000, 90000), function go() {
+            if (document.hidden) { after(10000, go); return; }
+            nidoDance();
+        });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', maybeSchedule);
+    else maybeSchedule();
+})();

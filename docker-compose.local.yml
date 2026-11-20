@@ -1,0 +1,52 @@
+# Local Docker environment: the same app image and PostgreSQL as the server, without Caddy/HTTPS.
+#
+#   Start:  docker compose -f docker-compose.local.yml up -d --build
+#   Open:   http://localhost:8080
+#   Stop:   docker compose -f docker-compose.local.yml down
+#
+# Sign-in uses the same owner account as `dotnet run`: your user-secrets file is mounted
+# read-only, so run `dotnet run --project src/CardShop.Web -- set-password` once first.
+name: manashop-local
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cardshop
+      POSTGRES_USER: cardshop
+      POSTGRES_PASSWORD: localdev   # local only; the server generates a random one
+    ports:
+      - "127.0.0.1:5433:5432"       # for psql/pgAdmin on your computer (5432 is your Windows Postgres)
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardshop -d cardshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"       # only reachable from this computer
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development   # detailed errors, cookies work over plain http
+      ConnectionStrings__Default: "Host=db;Database=cardshop;Username=cardshop;Password=localdev"
+      DataProtection__KeysPath: /keys
+      Database__MigrateOnStartup: "true"
+      APPDATA: /secrets                     # where the app looks for user secrets
+    volumes:
+      - keys:/keys
+      - type: bind
+        source: ${APPDATA:?Run this from Windows so APPDATA is set}/Microsoft/UserSecrets/40dbb286-a2c3-48c5-b55b-8c4b67560e98
+        target: /secrets/Microsoft/UserSecrets/40dbb286-a2c3-48c5-b55b-8c4b67560e98
+        read_only: true
+
+volumes:
+  db-data:
+  keys:

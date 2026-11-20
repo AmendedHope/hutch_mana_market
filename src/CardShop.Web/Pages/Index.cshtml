@@ -7,13 +7,13 @@
 }
 
 <style>
-    .home { --ink: #1e1b4b; --violet: #7c3aed; --pink: #db2777; --sky: #0ea5e9; --mint: #10b981; }
+    .home { --ink: var(--text); --violet: #7c3aed; --pink: #db2777; --sky: #0ea5e9; --mint: #10b981; }
 
     /* ----- hero ----- */
     .hero {
         position: relative; overflow: hidden;
         display: grid; grid-template-columns: 1.3fr 1fr; gap: 2rem; align-items: center;
-        padding: 3rem 2.75rem; margin-bottom: 2rem; border-radius: 24px; color: #fff;
+        padding: 3rem 2.75rem; margin: 1.75rem 0 2rem; border-radius: 24px; color: #fff;
         background: radial-gradient(700px 400px at 0% 0%, #6d28d9 0, transparent 60%),
                     radial-gradient(600px 400px at 100% 100%, #be185d 0, transparent 60%),
                     linear-gradient(135deg, #1e1b4b, #312e81);
@@ -27,15 +27,12 @@
     }
     .eyebrow { display: inline-block; padding: .3rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
                background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); }
-    .hero h1 { margin: 1rem 0 .6rem; font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+    .hero h1 { color: #fff; margin: 1rem 0 .6rem; font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
     .grad { background: linear-gradient(90deg, #c4b5fd, #f9a8d4, #7dd3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .hero p { max-width: 34rem; margin: 0 0 1.6rem; color: #ddd6fe; font-size: 1.05rem; }
     .cta { display: flex; flex-wrap: wrap; gap: .75rem; position: relative; z-index: 1; }
-    .btn-x { display: inline-flex; align-items: center; gap: .5rem; padding: .75rem 1.25rem; border-radius: 12px;
-             font-weight: 700; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease, background .15s; }
-    .btn-x.primary { color: #fff; background: linear-gradient(135deg, var(--violet), var(--pink)); box-shadow: 0 10px 25px rgba(219,39,119,.4); }
-    .btn-x.ghost { color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); }
-    .btn-x:hover { color: #fff; transform: translateY(-2px); }
+    .hero .btn-x.ghost { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
+    .hero .btn-x.ghost:hover { color: #fff; background: rgba(255,255,255,.18); }
 
     .fan { position: relative; height: 260px; z-index: 1; }
     .fan .card-x {
@@ -60,34 +57,34 @@
     .section-title h2 { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
     .section-title a { font-size: .9rem; text-decoration: none; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat { position: relative; padding: 1.2rem 1.25rem; border-radius: 18px; background: #fff; border: 1px solid #ede9fe;
-            box-shadow: 0 6px 20px rgba(76, 29, 149, .06); overflow: hidden; }
-    .stat::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--accent, var(--violet)); }
-    .stat .label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; }
+    .stat { position: relative; padding: 1.2rem 1.25rem; border-radius: 18px; background: var(--surface); border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm); overflow: hidden; }
+    .stat::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--tone, var(--violet)); }
+    .stat .label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
     .stat .value { margin-top: .35rem; font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
-    .stat .hint { margin-top: .2rem; font-size: .85rem; color: #6b7280; }
+    .stat .hint { margin-top: .2rem; font-size: .85rem; color: var(--muted); }
     .stat .hint a { text-decoration: none; }
 
     /* ----- actions ----- */
     .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
     .action { display: flex; gap: 1rem; align-items: flex-start; padding: 1.2rem; border-radius: 18px; text-decoration: none; color: var(--ink);
-              background: linear-gradient(#fff, #fff) padding-box, linear-gradient(135deg, #ddd6fe, #fbcfe8) border-box; border: 1px solid transparent;
+              background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(135deg, var(--accent-soft), var(--border), rgba(244,114,182,.35)) border-box; border: 1px solid transparent;
               transition: transform .15s ease, box-shadow .15s ease; }
-    .action:hover { color: var(--ink); transform: translateY(-3px); box-shadow: 0 14px 30px rgba(124, 58, 237, .15); }
-    .action .icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; color: #fff; background: var(--accent); }
+    .action:hover { color: var(--ink); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .action .icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; color: #fff; background: var(--tone); }
     .action strong { display: block; margin-bottom: .15rem; }
-    .action span { font-size: .9rem; color: #6b7280; }
+    .action span { font-size: .9rem; color: var(--muted); }
 
     /* ----- top cards ----- */
     .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .mini { border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid #ede9fe; transition: transform .15s ease, box-shadow .15s ease; }
-    .mini:hover { transform: translateY(-3px) rotate(-.5deg); box-shadow: 0 14px 30px rgba(124, 58, 237, .15); }
-    .mini .pic { aspect-ratio: 5 / 7; background: linear-gradient(160deg, #ede9fe, #fce7f3); }
+    .mini { border-radius: 14px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); transition: transform .15s ease, box-shadow .15s ease; }
+    .mini:hover { transform: translateY(-3px) rotate(-.5deg); box-shadow: var(--shadow); }
+    .mini .pic { aspect-ratio: 5 / 7; background: linear-gradient(160deg, var(--surface-2), var(--surface-3)); }
     .mini .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .mini .info { padding: .55rem .65rem .7rem; font-size: .85rem; }
     .mini .nm { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
-    .mini .val { color: #7c3aed; font-weight: 700; }
-    .empty { padding: 2rem; border-radius: 18px; text-align: center; color: #6b7280; background: repeating-linear-gradient(45deg, #faf5ff, #faf5ff 12px, #fff 12px, #fff 24px); border: 1px dashed #ddd6fe; margin-bottom: 2rem; }
+    .mini .val { color: var(--accent-text); font-weight: 700; }
+    .empty { padding: 2rem; border-radius: 18px; text-align: center; color: var(--muted); background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); border: 1px dashed var(--border); margin-bottom: 2rem; }
 
     @@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding: 2.25rem 1.5rem; } .fan { height: 230px; } }
     @@media (prefers-reduced-motion: reduce) { .fan .card-x, .btn-x, .action, .mini { transition: none; animation: none !important; } }
@@ -121,12 +118,12 @@
 
     <div class="section-title"><h2>At a glance</h2></div>
     <div class="stats">
-        <div class="stat tile" style="--accent: var(--violet)">
+        <div class="stat tile" style="--tone: var(--violet)">
             <div class="label">Cards in stock</div>
             <div class="value">@Model.Listings.ToString("N0")</div>
             <div class="hint">@Model.Units.ToString("N0") units on the shelf</div>
         </div>
-        <div class="stat tile" style="--accent: var(--pink)">
+        <div class="stat tile" style="--tone: var(--pink)">
             <div class="label">Market value</div>
             @if (Model.Priced > 0)
             {
@@ -139,12 +136,12 @@
                 <div class="hint"><a href="/Sync">Sync prices</a> to see it</div>
             }
         </div>
-        <div class="stat tile" style="--accent: var(--mint)">
+        <div class="stat tile" style="--tone: var(--mint)">
             <div class="label">Pricing check</div>
             @if (Model.Priced > 0)
             {
-                <div class="value">@Model.Underpriced <small style="font-size:1rem;font-weight:600;color:#6b7280">under</small> · @Model.Overpriced <small style="font-size:1rem;font-weight:600;color:#6b7280">over</small></div>
-                <div class="hint">Priced 15%+ away from market</div>
+                <div class="value">@Model.Underpriced <small style="font-size:1rem;font-weight:600;color:var(--muted)">under</small> · @Model.Overpriced <small style="font-size:1rem;font-weight:600;color:var(--muted)">over</small></div>
+                <div class="hint">Priced 15%+ away from market · <a href="/Analytics">Fix them</a></div>
             }
             else
             {
@@ -152,7 +149,7 @@
                 <div class="hint">Needs market prices first</div>
             }
         </div>
-        <div class="stat tile" style="--accent: var(--sky)">
+        <div class="stat tile" style="--tone: var(--sky)">
             <div class="label">Last price update</div>
             <div class="value">@(Model.LastPriceDate?.ToString("MMM d") ?? "Never")</div>
             <div class="hint">@(Model.LastPriceDate is null ? "Run your first sync" : $"{Model.Priced:N0} of {Model.Listings:N0} cards priced")</div>
@@ -161,15 +158,15 @@
 
     <div class="section-title"><h2>Jump in</h2></div>
     <div class="actions">
-        <a class="action tile" href="/Cards" style="--accent: linear-gradient(135deg, #7c3aed, #a855f7)">
+        <a class="action tile" href="/Cards" style="--tone: linear-gradient(135deg, #7c3aed, #a855f7)">
             <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/><rect x="14" y="15" width="7" height="6" rx="1.5"/></svg></div>
             <div><strong>Card gallery</strong><span>Search, filter and compare your prices to market.</span></div>
         </a>
-        <a class="action tile" href="/Import" style="--accent: linear-gradient(135deg, #db2777, #f472b6)">
+        <a class="action tile" href="/Import" style="--tone: linear-gradient(135deg, #db2777, #f472b6)">
             <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></div>
             <div><strong>Import inventory</strong><span>Drop in a CSV or Excel file of your stock.</span></div>
         </a>
-        <a class="action tile" href="/Sync" style="--accent: linear-gradient(135deg, #0ea5e9, #10b981)">
+        <a class="action tile" href="/Sync" style="--tone: linear-gradient(135deg, #0ea5e9, #10b981)">
             <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg></div>
             <div><strong>Sync prices</strong><span>Pull the latest market prices from TCGCSV.</span></div>
         </a>

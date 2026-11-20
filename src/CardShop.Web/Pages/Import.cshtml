@@ -4,26 +4,110 @@
     ViewData["Title"] = "Import inventory";
 }
 
-<h1>Import inventory</h1>
+<style>
+    .drop {
+        position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem;
+        min-height: 220px; padding: 2rem; text-align: center; cursor: pointer;
+        border: 2px dashed var(--border); border-radius: var(--radius); background: var(--surface-2);
+        transition: border-color .2s ease, background .2s ease, transform .2s ease;
+    }
+    .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+    .drop.over { transform: scale(1.01); }
+    .drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .drop .drop-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; color: #fff; background: var(--grad); box-shadow: var(--shadow-sm); }
+    .drop strong { font-size: 1.1rem; }
+    .drop .file-name { display: none; }
+    .drop.has-file .file-name { display: inline-flex; }
+    .drop.has-file .hint { display: none; }
+    .import-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: 1rem; }
+    .cols { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+</style>
 
-<form method="post" enctype="multipart/form-data">
-    <input type="file" name="Upload" accept=".csv,.xlsx" required />
-    <button type="submit">Import</button>
-</form>
+<div class="page-head">
+    <div class="page-icon" style="--icon-bg: linear-gradient(135deg, #db2777, #f472b6)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+    </div>
+    <div>
+        <h1>Import inventory</h1>
+        <p>Drop in a CSV or Excel export of your stock. Existing cards are updated, new ones are added.</p>
+    </div>
+</div>
 
 @if (Model.Result is not null)
 {
-    <p>Cards added: <strong>@Model.Result.CardsAdded</strong>,
-       inventory rows updated: <strong>@Model.Result.InventoryUpdated</strong></p>
+    var ok = Model.Result.Errors.Count == 0;
+    <div class="panel mb-4">
+        <div class="notice @(ok ? "success" : "warn") mb-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">@if (ok) { <path d="M20 6 9 17l-5-5"/> } else { <path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/> }</svg>
+            <div>@(ok ? "Import complete. Everything came through cleanly." : "Import finished, but some rows were skipped. Details below.")</div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-mini"><div class="label">New cards</div><div class="value">@Model.Result.CardsAdded.ToString("N0")</div></div>
+            <div class="stat-mini"><div class="label">Inventory rows updated</div><div class="value">@Model.Result.InventoryUpdated.ToString("N0")</div></div>
+            <div class="stat-mini"><div class="label">Skipped rows</div><div class="value" style="color:@(ok ? "inherit" : "var(--warn)")">@Model.Result.Errors.Count.ToString("N0")</div></div>
+        </div>
+        @if (!ok)
+        {
+            <h2 class="mt-4">Skipped rows @(Model.Result.Errors.Count > 50 ? "(first 50)" : "")</h2>
+            <ul class="list-clean">
+                @foreach (var e in Model.Result.Errors.Take(50))
+                {
+                    <li>@e</li>
+                }
+            </ul>
+        }
+        <div class="import-actions">
+            <a class="btn-x primary" href="/Cards">See your cards &rarr;</a>
+            <a class="btn-x ghost" href="/Sync">Sync prices</a>
+        </div>
+    </div>
+}
 
-    @if (Model.Result.Errors.Count > 0)
-    {
-        <h3>Skipped rows (@Model.Result.Errors.Count)</h3>
-        <ul>
-            @foreach (var e in Model.Result.Errors.Take(50))
-            {
-                <li>@e</li>
+<div class="panel-grid">
+    <div class="panel">
+        <form method="post" enctype="multipart/form-data" data-busy="Importing…">
+            <label class="drop" id="drop">
+                <input type="file" name="Upload" id="upload" accept=".csv,.xlsx,.txt" required />
+                <span class="drop-icon" aria-hidden="true">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15l3-3 3 3"/></svg>
+                </span>
+                <strong>Drag your file here</strong>
+                <span class="hint text-muted">or click to choose a <strong>.csv</strong> or <strong>.xlsx</strong> file</span>
+                <span class="file-name chip accent" id="fileName"></span>
+            </label>
+            <div class="import-actions">
+                <button type="submit" class="btn-x primary"><span class="spinner" aria-hidden="true"></span><span class="label">Import</span></button>
+                <span class="text-muted small">Large files can take a little while. Keep this page open.</span>
+            </div>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h2>What your file needs</h2>
+        <p class="text-muted mb-2">A header row with these columns. The names on a TCGplayer export work as-is.</p>
+        <ol class="steps">
+            <li><strong>Product ID</strong>, needed for prices and card art<div class="cols"><span class="chip">TCGplayer Id</span><span class="chip">Product ID</span></div></li>
+            <li><strong>Name, game and set</strong><div class="cols"><span class="chip">Product Name</span><span class="chip">Product Line</span><span class="chip">Set Name</span></div></li>
+            <li><strong>Condition, quantity and price</strong><div class="cols"><span class="chip">Condition</span><span class="chip">Total Quantity</span><span class="chip">TCG Marketplace Price</span></div></li>
+            <li><strong>Optional:</strong> what you paid<div class="cols"><span class="chip">Cost</span><span class="chip">Cost Basis</span></div></li>
+        </ol>
+        <p class="text-muted small mb-0">Foil is picked up automatically when the condition says "Foil", e.g. <em>Near Mint Foil</em>.</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var drop = document.getElementById('drop'), input = document.getElementById('upload'), name = document.getElementById('fileName');
+            function show() {
+                var f = input.files && input.files[0];
+                drop.classList.toggle('has-file', !!f);
+                name.textContent = f ? f.name + ' · ' + Math.max(1, Math.round(f.size / 1024)) + ' KB' : '';
             }
-        </ul>
-    }
+            input.addEventListener('change', show);
+            ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function () { drop.classList.add('over'); }); });
+            ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function () { drop.classList.remove('over'); }); });
+            drop.addEventListener('drop', function () { setTimeout(show, 0); });
+        })();
+    </script>
 }

@@ -4,27 +4,79 @@
     ViewData["Title"] = "Sync prices";
 }
 
-<h1>Sync prices</h1>
-<p>Current data day: <strong>@Model.DataDate</strong>. TCGCSV publishes new prices once a day.</p>
+<style>
+    .sync-hero { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; }
+    .day { display: flex; align-items: center; gap: 1rem; }
+    .day .cal {
+        flex: none; width: 72px; border-radius: 14px; overflow: hidden; text-align: center;
+        background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    }
+    .day .cal .m { padding: .2rem 0; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: var(--grad); }
+    .day .cal .d { padding: .25rem 0 .35rem; font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .day .t { font-weight: 700; font-size: 1.05rem; }
+    .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 0 var(--success); animation: pulse 2s infinite; margin-right: .35rem; }
+    @@keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--success-soft); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+    @@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+</style>
 
-<form method="post">
-    <button type="submit">Sync now</button>
-</form>
-<p><small>The first run looks up each card's set in the catalog and can take a few minutes. Leave this page open.</small></p>
+<div class="page-head">
+    <div class="page-icon" style="--icon-bg: linear-gradient(135deg, #0ea5e9, #10b981)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
+    </div>
+    <div>
+        <h1>Sync prices</h1>
+        <p>Pull today's market prices from TCGCSV for every card you stock.</p>
+    </div>
+</div>
+
+<div class="panel sync-hero mb-4">
+    <div class="day">
+        <div class="cal" aria-hidden="true">
+            <div class="m">@Model.DataDate.ToString("MMM")</div>
+            <div class="d">@Model.DataDate.Day</div>
+        </div>
+        <div>
+            <div class="t">Current data day: @Model.DataDate.ToString("dddd, MMMM d")</div>
+            <div class="text-muted small"><span class="pulse" aria-hidden="true"></span>TCGCSV publishes new prices once a day. Prices also sync automatically in the background.</div>
+        </div>
+    </div>
+    <form method="post" data-busy="Syncing… keep this page open">
+        <button type="submit" class="btn-x primary"><span class="spinner" aria-hidden="true"></span><span class="label">Sync now</span></button>
+    </form>
+</div>
 
 @if (Model.Result is not null)
 {
-    <p>Prices saved: <strong>@Model.Result.PricesSaved</strong>,
-       changes over threshold: <strong>@Model.Result.ChangesFound</strong></p>
-
-    @if (Model.Result.Notes.Count > 0)
-    {
-        <h3>Notes (@Model.Result.Notes.Count)</h3>
-        <ul>
-            @foreach (var n in Model.Result.Notes.Take(100))
-            {
-                <li>@n</li>
-            }
-        </ul>
-    }
+    var r = Model.Result;
+    <div class="panel mb-4">
+        <div class="notice @(r.PricesSaved > 0 ? "success" : "info") mb-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            <div>@(r.PricesSaved > 0 ? "Sync complete. Fresh prices are in." : "Sync finished. Nothing new to save, which usually means today's prices are already in.")</div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-mini"><div class="label">Prices saved</div><div class="value">@r.PricesSaved.ToString("N0")</div></div>
+            <div class="stat-mini"><div class="label">Big moves</div><div class="value">@r.ChangesFound.ToString("N0")</div></div>
+            <div class="stat-mini"><div class="label">Notes</div><div class="value">@r.Notes.Count.ToString("N0")</div></div>
+        </div>
+        @if (r.Notes.Count > 0)
+        {
+            <h2 class="mt-4">Notes @(r.Notes.Count > 100 ? "(first 100)" : "")</h2>
+            <ul class="list-clean">
+                @foreach (var n in r.Notes.Take(100))
+                {
+                    <li>@n</li>
+                }
+            </ul>
+        }
+        <div class="mt-3"><a class="btn-x ghost" href="/Cards?sort=value">See cards by value &rarr;</a></div>
+    </div>
 }
+
+<div class="panel">
+    <h2>Good to know</h2>
+    <ol class="steps mb-0">
+        <li><strong>The first sync is the slowest.</strong> It looks up which set each card belongs to, which can take a few minutes. After that it's quick.</li>
+        <li><strong>"Big moves"</strong> are price changes over your alert threshold. If a Discord webhook is set up, they're posted there too.</li>
+        <li><strong>A card with no price</strong> usually has a product ID TCGplayer doesn't recognize. Check it in your import file.</li>
+    </ol>
+</div>

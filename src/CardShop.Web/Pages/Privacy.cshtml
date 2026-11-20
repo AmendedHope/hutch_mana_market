@@ -1,8 +1,44 @@
 ﻿@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="page-head">
+    <div class="page-icon" style="--icon-bg: linear-gradient(135deg, #6366f1, #8b5cf6)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+        <h1>Privacy</h1>
+        <p>What this app stores and where your data goes. Short version: it stays with you.</p>
+    </div>
+</div>
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2>What's stored</h2>
+        <ul class="steps mb-0">
+            <li><strong>Your inventory</strong>: the cards, quantities, prices and costs you import, kept in this shop's own database.</li>
+            <li><strong>Market prices</strong>: one price per card per day, downloaded from TCGCSV.</li>
+            <li><strong>Your sign-in</strong>: a username and a scrambled (hashed) password. The real password is never stored.</li>
+        </ul>
+    </div>
+    <div class="panel">
+        <h2>Cookies and your browser</h2>
+        <ul class="steps mb-0">
+            <li><strong>Sign-in cookie</strong>: keeps you signed in. It's encrypted and only sent to this site.</li>
+            <li><strong>Security cookie</strong>: protects forms from being submitted by other websites.</li>
+            <li><strong>Browser storage</strong>: remembers your light/dark choice and how often you've watered Bushu. It never leaves your browser.</li>
+        </ul>
+    </div>
+    <div class="panel">
+        <h2>Outside services</h2>
+        <ul class="steps mb-0">
+            <li><strong>TCGCSV</strong>: the app downloads public price lists from it. Nothing about you or your stock is sent.</li>
+            <li><strong>TCGplayer images</strong>: card art loads straight from TCGplayer's image server, so it sees your browser's address, as with any website image.</li>
+            <li><strong>Discord</strong> (only if set up): price-alert messages are posted to your own channel.</li>
+        </ul>
+    </div>
+</div>
+
+<p class="text-muted small mt-4">No analytics, no ads, no tracking.</p>

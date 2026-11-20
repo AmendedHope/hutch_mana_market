@@ -1,0 +1,489 @@
+@page
+@model CardShop.Web.Pages.AnalyticsModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Analytics";
+    var inv = CultureInfo.InvariantCulture;
+    string Money(decimal v) => (v < 0 ? "-$" : "$") + Math.Abs(v).ToString("N2");
+    string Signed(decimal v) => (v > 0 ? "+$" : v < 0 ? "-$" : "$") + Math.Abs(v).ToString("N2");
+    string Pct(decimal? v) => v is { } p ? (p > 0 ? "+" : "") + p.ToString("0.#") + "%" : "—";
+    var listVsMarket = Model.MarketValue > 0 ? (Model.ListValue - Model.MarketValue) / Model.MarketValue * 100 : (decimal?)null;
+}
+
+<style>
+    .filters { padding: 1rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    .filters .form-control, .filters .form-select { height: 42px; }
+    .filters .form-select { width: auto; max-width: 210px; }
+    .search { position: relative; flex: 1 1 240px; min-width: 200px; }
+    .search svg { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .search input { padding-left: 2.4rem; }
+
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .kpi { padding: 1.1rem 1.2rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+    .kpi::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--tone, var(--accent)); }
+    .kpi .label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .kpi .value { margin-top: .3rem; font-size: 1.65rem; font-weight: 800; letter-spacing: -.02em; }
+    .kpi .hint { font-size: .85rem; color: var(--muted); }
+    .pos { color: var(--success); } .neg { color: var(--danger); }
+
+    .tabs { display: inline-flex; gap: .25rem; padding: .3rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 1rem; }
+    .tabs button { border: 0; background: none; padding: .5rem 1rem; border-radius: 10px; font-weight: 700; color: var(--muted); cursor: pointer; }
+    .tabs button.active { background: var(--surface); color: var(--accent-text); box-shadow: var(--shadow-sm); }
+    .tab-panel { display: none; } .tab-panel.active { display: block; }
+
+    .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .9rem 1.1rem; }
+    .rules label { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: .3rem; }
+    .rules .help { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+    .with-unit { position: relative; } .with-unit .form-control { padding-right: 2rem; }
+    .with-unit span { position: absolute; right: .8rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .9rem; pointer-events: none; }
+    .with-unit.pre .form-control { padding-left: 1.6rem; padding-right: .75rem; } .with-unit.pre span { left: .75rem; right: auto; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    table.tx { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .tx th { position: sticky; top: 0; background: var(--surface-2); color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: .65rem .7rem; white-space: nowrap; border-bottom: 1px solid var(--border); }
+    .tx td { padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+    .tx tr:last-child td { border-bottom: 0; }
+    .tx tbody tr:hover td { background: var(--accent-soft); }
+    .tx .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .tx input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+    .tx .price-in { width: 92px; height: 34px; text-align: right; padding: .25rem .5rem; }
+    .card-cell { display: flex; align-items: center; gap: .65rem; min-width: 230px; white-space: normal; }
+    .thumb { width: 34px; aspect-ratio: 5 / 7; border-radius: 4px; flex: none; object-fit: cover; background: var(--surface-3); }
+    .card-cell .nm { font-weight: 700; line-height: 1.2; }
+    .card-cell .sb { font-size: .78rem; color: var(--muted); }
+    .flag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+    .flag.under { color: var(--success); background: var(--success-soft); }
+    .flag.over { color: var(--warn); background: var(--warn-soft); }
+
+    .actionbar { position: sticky; bottom: 12px; z-index: 5; margin-top: 1rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
+                 padding: .8rem 1rem; border-radius: var(--radius); background: var(--nav-bg); backdrop-filter: blur(14px); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .actionbar .sel { font-weight: 700; }
+    .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-top: 1.25rem; align-items: start; }
+    .split > .panel { margin-top: 0; }
+</style>
+
+<div class="page-head">
+    <div class="page-icon" style="--icon-bg: linear-gradient(135deg, #f59e0b, #ef4444)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>
+    </div>
+    <div>
+        <h1>Analytics</h1>
+        <p>Find mispriced cards, fix them in bulk, and see what your stock is really earning you.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Flash))
+{
+    <div class="notice success mb-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        <div>@Model.Flash</div>
+    </div>
+}
+
+<form method="get" id="af">
+    <input type="hidden" name="Tab" id="tabInput" value="@Model.Tab" />
+
+    <div class="filters panel">
+        <div class="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" class="form-control" name="Q" value="@Model.Q" placeholder="Search name, set or product ID…" aria-label="Search" />
+        </div>
+        <select name="Game" class="form-select" aria-label="Game">
+            <option value="">All games</option>
+            @foreach (var g in Model.Games) { <option value="@g" selected="@(g == Model.Game)">@g</option> }
+        </select>
+        <select name="SetName" class="form-select" aria-label="Set">
+            <option value="">All sets</option>
+            @foreach (var s in Model.Sets) { <option value="@s" selected="@(s == Model.SetName)">@s</option> }
+        </select>
+        <select name="Condition" class="form-select" aria-label="Condition">
+            <option value="">Any condition</option>
+            @foreach (var c in Model.Conditions) { <option value="@c" selected="@(c == Model.Condition)">@c</option> }
+        </select>
+        <select name="Foil" class="form-select" aria-label="Foil">
+            <option value="">Foil or not</option>
+            <option value="yes" selected="@(Model.Foil == "yes")">Foil only</option>
+            <option value="no" selected="@(Model.Foil == "no")">Non-foil only</option>
+        </select>
+        <select name="Stock" class="form-select" aria-label="Stock">
+            <option value="in" selected="@(Model.Stock == "in")">In stock</option>
+            <option value="all" selected="@(Model.Stock == "all")">Include sold out</option>
+        </select>
+        <button type="submit" class="btn-x primary small">Search</button>
+        <a class="btn-x ghost small" href="/Analytics?keep=1" title="Clear filters and go back to the default rules">Reset</a>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi" style="--tone: var(--accent)">
+            <div class="label">Market value</div>
+            <div class="value">@Money(Model.MarketValue)</div>
+            <div class="hint">@Model.PricedCount.ToString("N0") of @Model.CardCount.ToString("N0") cards have a market price</div>
+        </div>
+        <div class="kpi" style="--tone: #0ea5e9">
+            <div class="label">Your listed value</div>
+            <div class="value">@Money(Model.ListValue)</div>
+            <div class="hint">@(listVsMarket is null ? "Sync prices to compare" : Pct(listVsMarket) + " vs market overall")</div>
+        </div>
+        <div class="kpi" style="--tone: var(--success)">
+            <div class="label">Money left on the table</div>
+            <div class="value pos">@Money(Model.LeftOnTable)</div>
+            <div class="hint">@Model.UnderCount.ToString("N0") underpriced · @Model.OverCount.ToString("N0") overpriced</div>
+        </div>
+        <div class="kpi" style="--tone: var(--accent-2)">
+            <div class="label">Unrealized profit</div>
+            @if (Model.WithCostCount > 0)
+            {
+                <div class="value @(Model.Gain >= 0 ? "pos" : "neg")">@Signed(Model.Gain)</div>
+                <div class="hint">On @Model.WithCostCount.ToString("N0") cards with a cost</div>
+            }
+            else
+            {
+                <div class="value">&mdash;</div>
+                <div class="hint">Add costs to your import file</div>
+            }
+        </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="reprice" class="@(Model.Tab == "reprice" ? "active" : "")">Repricing</button>
+        <button type="button" role="tab" data-tab="profit" class="@(Model.Tab == "profit" ? "active" : "")">Profit &amp; margin</button>
+    </div>
+
+    <!-- repricing rules (part of the GET form so changes re-run the analysis) -->
+    <div class="tab-panel @(Model.Tab == "reprice" ? "active" : "")" data-panel="reprice">
+        <div class="panel mb-3">
+            <h2>Pricing rules</h2>
+            <div class="rules">
+                <div>
+                    <label for="Target">Price at</label>
+                    <div class="with-unit"><input class="form-control" type="number" id="Target" name="Target" min="50" max="200" step="1" value="@Model.Target.ToString("0.##", inv)" /><span>%</span></div>
+                    <div class="help">of market price</div>
+                </div>
+                <div>
+                    <label for="Threshold">Flag when off by</label>
+                    <div class="with-unit"><input class="form-control" type="number" id="Threshold" name="Threshold" min="1" max="90" step="1" value="@Model.Threshold.ToString("0.##", inv)" /><span>%</span></div>
+                    <div class="help">or more from market</div>
+                </div>
+                <div>
+                    <label for="Round">Rounding</label>
+                    <select class="form-select" id="Round" name="Round">
+                        <option value="cents" selected="@(Model.Round == "cents")">To the cent ($4.37)</option>
+                        <option value="nickel" selected="@(Model.Round == "nickel")">To 5¢ ($4.35)</option>
+                        <option value="99" selected="@(Model.Round == "99")">Ends in .99 ($3.99)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="MinPrice">Never below</label>
+                    <div class="with-unit pre"><input class="form-control" type="number" id="MinPrice" name="MinPrice" min="0" step="0.01" value="@Model.MinPrice.ToString("0.00", inv)" /><span>$</span></div>
+                    <div class="help">minimum price per card</div>
+                </div>
+                <div>
+                    <label for="Floor">Protect cost</label>
+                    <select class="form-select" id="Floor" name="Floor">
+                        <option value="cost" selected="@(Model.Floor == "cost")">Never below cost</option>
+                        <option value="none" selected="@(Model.Floor == "none")">Ignore cost</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="MinMargin">Plus a margin of</label>
+                    <div class="with-unit"><input class="form-control" type="number" id="MinMargin" name="MinMargin" min="0" max="500" step="1" value="@Model.MinMargin.ToString("0.##", inv)" disabled="@(Model.Floor != "cost")" /><span>%</span></div>
+                    <div class="help">above cost</div>
+                </div>
+                <div>
+                    <label for="Show">Show</label>
+                    <select class="form-select" id="Show" name="Show">
+                        <option value="both" selected="@(Model.Show == "both")">Under- and overpriced</option>
+                        <option value="under" selected="@(Model.Show == "under")">Underpriced only</option>
+                        <option value="over" selected="@(Model.Show == "over")">Overpriced only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-panel @(Model.Tab == "profit" ? "active" : "")" data-panel="profit">
+        <div class="panel mb-3">
+            <h2>Profit settings</h2>
+            <div class="rules">
+                <div>
+                    <label for="CostMode">The Cost column in my file is</label>
+                    <select class="form-select" id="CostMode" name="CostMode">
+                        <option value="unit" selected="@(Model.CostMode == "unit")">Per card</option>
+                        <option value="row" selected="@(Model.CostMode == "row")">For the whole row (all copies)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="FeePct">Selling fees</label>
+                    <div class="with-unit"><input class="form-control" type="number" id="FeePct" name="FeePct" min="0" max="50" step="0.1" value="@Model.FeePct.ToString("0.##", inv)" /><span>%</span></div>
+                    <div class="help">marketplace + payment fees, to estimate what you'd keep</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ================= Repricing ================= -->
+<div class="tab-panel @(Model.Tab == "reprice" ? "active" : "")" data-panel="reprice">
+    @if (Model.PricedCount == 0)
+    {
+        <div class="notice info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <div>No market prices yet for these cards. <a href="/Sync">Sync prices</a> and this list will fill in.</div>
+        </div>
+    }
+    else if (Model.Reprice.Count == 0)
+    {
+        <div class="panel text-center py-5">
+            <div style="font-size:2.2rem" aria-hidden="true">🎯</div>
+            <h2>Everything's priced within @Model.Threshold.ToString("0.##")% of market</h2>
+            <p class="text-muted mb-0">Nice. Lower the "Flag when off by" number to dig deeper.</p>
+        </div>
+    }
+    else
+    {
+        <form method="post" id="rf">
+            <input type="hidden" name="returnQuery" value="@Request.QueryString" />
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="text-muted small">
+                    @if (Model.RepriceTotal > Model.Reprice.Count) { <text>Showing the @Model.Reprice.Count biggest of @Model.RepriceTotal.ToString("N0") cards. Narrow the filters to see the rest.</text> }
+                    else { <text>@Model.RepriceTotal.ToString("N0") card@(Model.RepriceTotal == 1 ? "" : "s") to review, biggest impact first. Edit any new price before applying.</text> }
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="tx">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selAll" aria-label="Select all" /></th>
+                            <th>Card</th>
+                            <th class="num">Qty</th>
+                            <th class="num">Cost</th>
+                            <th class="num">Yours</th>
+                            <th class="num">Market</th>
+                            <th class="num">Low</th>
+                            <th class="num">vs market</th>
+                            <th class="num">New price</th>
+                            <th class="num">Change</th>
+                            <th class="num">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Reprice)
+                        {
+                            var img = CardShop.Web.Pages.CardsModel.ImageUrl(r.ProductId);
+                            <tr data-qty="@r.Qty" data-yours="@r.YourPrice.ToString("0.00", inv)">
+                                <td><input type="checkbox" name="selected" value="@r.ItemId" class="rowSel" aria-label="Select @r.Name" /></td>
+                                <td>
+                                    <div class="card-cell">
+                                        @if (img is not null) { <img class="thumb" src="@img" alt="" loading="lazy" onerror="this.style.visibility='hidden'" /> } else { <span class="thumb"></span> }
+                                        <div>
+                                            <div class="nm">@r.Name</div>
+                                            <div class="sb">@r.SetName · @r.Condition@(r.IsFoil ? " · Foil" : "")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="num">@r.Qty</td>
+                                <td class="num">@(r.UnitCost is { } uc ? Money(uc) : "—")</td>
+                                <td class="num">@Money(r.YourPrice)</td>
+                                <td class="num">@Money(r.Market!.Value)</td>
+                                <td class="num text-muted">@(r.Low is { } lo ? Money(lo) : "—")</td>
+                                <td class="num"><span class="flag @(r.Status == CardShop.Web.Pages.PriceStatus.Under ? "under" : "over")">@Pct(r.DiffPct)</span></td>
+                                <td class="num"><input class="form-control price-in" name="price[@r.ItemId]" inputmode="decimal" value="@r.Suggested!.Value.ToString("0.00", inv)" aria-label="New price for @r.Name" /></td>
+                                <td class="num change">@Signed(r.ChangePerUnit)</td>
+                                <td class="num impact @(r.Impact >= 0 ? "pos" : "neg")">@Signed(r.Impact)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="actionbar">
+                <div><span class="sel" id="selCount">0 selected</span> <span class="text-muted" id="selImpact"></span></div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn-x ghost" asp-page-handler="Export" id="btnExport" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                        Download CSV for TCGplayer
+                    </button>
+                    <button type="submit" class="btn-x primary" asp-page-handler="Apply" id="btnApply" disabled>Apply to my prices</button>
+                </div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+                <strong>Apply</strong> updates the prices in this app. <strong>Download CSV</strong> gives you a file in TCGplayer's pricing layout to upload in the Seller Portal.
+                Check one card's ID against your own TCGplayer export before your first bulk upload.
+            </p>
+        </form>
+    }
+</div>
+
+<!-- ================= Profit & margin ================= -->
+<div class="tab-panel @(Model.Tab == "profit" ? "active" : "")" data-panel="profit">
+    @if (Model.MissingCostCount > 0)
+    {
+        <div class="notice warn mb-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            <div>@Model.MissingCostCount.ToString("N0") card@(Model.MissingCostCount == 1 ? " has" : "s have") no cost, so they're left out of these numbers. Add a <strong>Cost</strong> column to your import file to include them.</div>
+        </div>
+    }
+
+    @if (Model.WithCostCount == 0)
+    {
+        <div class="panel text-center py-5">
+            <div style="font-size:2.2rem" aria-hidden="true">🧾</div>
+            <h2>No cards with both a cost and a market price yet</h2>
+            <p class="text-muted mb-3">Profit needs what you paid (a <strong>Cost</strong> column on import) and a market price (from a sync).</p>
+            <div class="d-flex gap-2 justify-content-center"><a class="btn-x primary" href="/Import">Import with costs</a><a class="btn-x ghost" href="/Sync">Sync prices</a></div>
+        </div>
+    }
+    else
+    {
+        <div class="kpis mt-0">
+            <div class="kpi" style="--tone: #64748b"><div class="label">Total cost</div><div class="value">@Money(Model.CostTotal)</div><div class="hint">What you paid</div></div>
+            <div class="kpi" style="--tone: var(--accent)"><div class="label">Worth at market</div><div class="value">@Money(Model.CostedValue)</div><div class="hint">Same cards, today</div></div>
+            <div class="kpi" style="--tone: var(--success)"><div class="label">You'd keep</div><div class="value @(Model.NetIfSold >= 0 ? "pos" : "neg")">@Signed(Model.NetIfSold)</div><div class="hint">Selling all at market@(Model.FeePct > 0 ? $", after {Model.FeePct:0.##}% fees" : "")</div></div>
+            <div class="kpi" style="--tone: var(--accent-2)"><div class="label">Return on cost</div><div class="value @(Model.Roi >= 0 ? "pos" : "neg")">@Pct(Model.Roi)</div><div class="hint">Profit ÷ cost</div></div>
+        </div>
+
+        <div class="panel">
+            <h2>By game</h2>
+            <div class="table-wrap">
+                <table class="tx">
+                    <thead><tr><th>Game</th><th class="num">Cards</th><th class="num">Units</th><th class="num">Cost</th><th class="num">Market value</th><th class="num">Profit</th><th class="num">Return</th></tr></thead>
+                    <tbody>
+                        @foreach (var g in Model.ByGame)
+                        {
+                            <tr>
+                                <td><strong>@g.Game</strong></td>
+                                <td class="num">@g.Cards.ToString("N0")</td>
+                                <td class="num">@g.Units.ToString("N0")</td>
+                                <td class="num">@Money(g.Cost)</td>
+                                <td class="num">@Money(g.Value)</td>
+                                <td class="num @(g.Gain >= 0 ? "pos" : "neg")">@Signed(g.Gain)</td>
+                                <td class="num @(g.Roi >= 0 ? "pos" : "neg")">@Pct(g.Roi)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="split">
+            @foreach (var (title, emoji, list, empty) in new[] {
+                ("Biggest winners", "🚀", Model.Winners, "No cards are worth more than you paid yet."),
+                ("Worth less than you paid", "📉", Model.Losers, "None. Every card is worth at least what you paid.") })
+            {
+                <div class="panel">
+                    <h2>@emoji @title</h2>
+                    @if (list.Count == 0)
+                    {
+                        <p class="text-muted mb-0">@empty</p>
+                    }
+                    else
+                    {
+                        <div class="table-wrap">
+                            <table class="tx">
+                                <thead><tr><th>Card</th><th class="num">Qty</th><th class="num">Paid</th><th class="num">Market</th><th class="num">Gain</th></tr></thead>
+                                <tbody>
+                                    @foreach (var r in list)
+                                    {
+                                        <tr>
+                                            <td><div class="card-cell" style="min-width:180px"><div><div class="nm">@r.Name</div><div class="sb">@r.SetName · @r.Condition</div></div></div></td>
+                                            <td class="num">@r.Qty</td>
+                                            <td class="num">@Money(r.UnitCost!.Value)</td>
+                                            <td class="num">@Money(r.Market!.Value)</td>
+                                            <td class="num @(r.Gain >= 0 ? "pos" : "neg")">@Signed(r.Gain!.Value)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var KEY = 'analytics.query';
+            var form = document.getElementById('af');
+            var tabInput = document.getElementById('tabInput');
+
+            // Remember filters and rules between visits.
+            var params = new URLSearchParams(location.search);
+            if (params.has('keep')) { try { localStorage.removeItem(KEY); } catch (e) { } history.replaceState(null, '', '/Analytics'); }
+            else if (!location.search) {
+                var saved = null; try { saved = localStorage.getItem(KEY); } catch (e) { }
+                if (saved) { location.replace('/Analytics' + saved); return; }
+            } else { try { localStorage.setItem(KEY, location.search); } catch (e) { } }
+
+            // Re-run the analysis when a filter or rule changes.
+            form.querySelectorAll('select, input[type=number]').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    if (el.name === 'Game') form.querySelector('[name=SetName]').value = '';
+                    form.submit();
+                });
+            });
+
+            // Tabs switch instantly; the choice is kept in the URL.
+            document.querySelectorAll('.tabs [data-tab]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var tab = btn.getAttribute('data-tab');
+                    tabInput.value = tab;
+                    document.querySelectorAll('.tabs [data-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+                    document.querySelectorAll('[data-panel]').forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-panel') === tab); });
+                    var u = new URL(location.href); u.searchParams.set('Tab', tab); history.replaceState(null, '', u);
+                    try { localStorage.setItem(KEY, u.search); } catch (e) { }
+                    var rq = document.querySelector('#rf [name=returnQuery]'); if (rq) rq.value = u.search;
+                });
+            });
+
+            // Repricing table: select rows, live totals, confirm before applying.
+            var rf = document.getElementById('rf');
+            if (!rf) return;
+            var all = document.getElementById('selAll');
+            var boxes = Array.prototype.slice.call(rf.querySelectorAll('.rowSel'));
+            var countEl = document.getElementById('selCount'), impactEl = document.getElementById('selImpact');
+            var btnApply = document.getElementById('btnApply'), btnExport = document.getElementById('btnExport');
+
+            function money(v) { return (v > 0 ? '+$' : v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+            function refreshRow(tr) {
+                var p = parseFloat(tr.querySelector('.price-in').value.replace('$', ''));
+                var qty = +tr.getAttribute('data-qty'), yours = +tr.getAttribute('data-yours');
+                if (isNaN(p)) return 0;
+                var change = p - yours, impact = change * qty;
+                tr.querySelector('.change').textContent = money(change);
+                var imp = tr.querySelector('.impact');
+                imp.textContent = money(impact);
+                imp.className = 'num impact ' + (impact >= 0 ? 'pos' : 'neg');
+                return impact;
+            }
+
+            function refresh() {
+                var n = 0, total = 0;
+                boxes.forEach(function (b) { var tr = b.closest('tr'); var imp = refreshRow(tr); if (b.checked) { n++; total += imp; } });
+                countEl.textContent = n + ' selected';
+                impactEl.textContent = n ? '· impact ' + money(total) : '';
+                btnApply.disabled = btnExport.disabled = n === 0;
+                all.checked = n > 0 && n === boxes.length;
+                all.indeterminate = n > 0 && n < boxes.length;
+            }
+
+            all.addEventListener('change', function () { boxes.forEach(function (b) { b.checked = all.checked; }); refresh(); });
+            boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+            rf.querySelectorAll('.price-in').forEach(function (inp) {
+                inp.addEventListener('input', function () {
+                    var box = inp.closest('tr').querySelector('.rowSel');
+                    if (!box.checked) box.checked = true;   // editing a price selects that row
+                    refresh();
+                });
+            });
+            btnApply.addEventListener('click', function (e) {
+                var n = boxes.filter(function (b) { return b.checked; }).length;
+                if (!confirm('Update ' + n + ' price' + (n === 1 ? '' : 's') + ' in your inventory?')) e.preventDefault();
+            });
+            refresh();
+        })();
+    </script>
+}

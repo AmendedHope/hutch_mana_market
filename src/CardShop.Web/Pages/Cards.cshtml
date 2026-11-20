@@ -2,37 +2,70 @@
 @model CardShop.Web.Pages.CardsModel
 @{
     ViewData["Title"] = "Cards";
+    var filtered = !string.IsNullOrWhiteSpace(Model.Q) || !string.IsNullOrEmpty(Model.Game) || !string.IsNullOrEmpty(Model.SetName)
+                   || !string.IsNullOrEmpty(Model.Condition) || !string.IsNullOrEmpty(Model.Foil) || Model.InStock;
 }
 
 <style>
-    .filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
-    .filters input[type=search] { flex: 1 1 260px; min-width: 200px; }
-    .filters input, .filters select, .filters button { padding: .4rem .6rem; }
-    .summary { margin: 0 0 1rem; opacity: .8; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
-    .tile { border: 1px solid rgba(128,128,128,.35); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-    .art { position: relative; aspect-ratio: 5 / 7; background: rgba(128,128,128,.12); display: flex; align-items: center; justify-content: center; }
-    .art::before { content: "No image"; position: absolute; opacity: .5; font-size: .85rem; }
+    .filters { padding: 1rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    .search { position: relative; flex: 1 1 280px; min-width: 220px; }
+    .search svg { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .search input { padding-left: 2.4rem; }
+    .filters .form-control, .filters .form-select { height: 42px; }
+    .filters .form-select { width: auto; flex: 0 1 auto; max-width: 220px; }
+    .check { display: inline-flex; align-items: center; gap: .45rem; padding: 0 .85rem; height: 42px; border-radius: 12px; border: 1px solid var(--border);
+             background: var(--surface); font-size: .95rem; cursor: pointer; user-select: none; }
+    .check input { accent-color: var(--accent); width: 16px; height: 16px; }
+    .check:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
+
+    .summary { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 1.25rem; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 1.1rem; }
+    .tile { display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; background: var(--surface); border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm); transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
+    .tile:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--accent); }
+    .art { position: relative; aspect-ratio: 5 / 7; display: flex; align-items: center; justify-content: center;
+           background: linear-gradient(160deg, var(--surface-2), var(--surface-3)); }
+    .art::before { content: "No image"; position: absolute; color: var(--muted); font-size: .85rem; }
     .art img { position: relative; width: 100%; height: 100%; object-fit: contain; }
-    .badge { position: absolute; top: 6px; padding: 2px 7px; border-radius: 10px; font-size: .75rem; font-weight: 600; background: rgba(0,0,0,.75); color: #fff; }
-    .badge.qty { right: 6px; }
-    .badge.foil { left: 6px; background: linear-gradient(135deg, #6a5acd, #d946ef); }
-    .meta { padding: .5rem .6rem .7rem; font-size: .85rem; }
-    .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sub { opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .prices { margin-top: .4rem; display: flex; flex-wrap: wrap; gap: .1rem .6rem; }
-    .diff.above { color: #c2410c; }
-    .diff.below { color: #15803d; }
-    .muted { opacity: .6; }
-    .pager { display: flex; gap: 1rem; align-items: center; justify-content: center; margin: 1.5rem 0; }
+    .tag { position: absolute; top: 8px; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; color: #fff;
+           background: rgba(15, 12, 30, .78); backdrop-filter: blur(4px); }
+    .tag.qty { right: 8px; }
+    .tag.foil { left: 8px; background: linear-gradient(135deg, #8b5cf6, #ec4899, #38bdf8); }
+    .meta { padding: .65rem .75rem .8rem; font-size: .85rem; }
+    .name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prices { margin-top: .5rem; display: grid; grid-template-columns: 1fr 1fr; gap: .15rem .5rem; }
+    .prices .k { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .prices .v { font-weight: 700; }
+    .diff { grid-column: 1 / -1; justify-self: start; margin-top: .3rem; padding: 1px 8px; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+    .diff.above { color: var(--warn); background: var(--warn-soft); }
+    .diff.below { color: var(--success); background: var(--success-soft); }
+    .diff.even { color: var(--muted); background: var(--surface-2); }
+    .no-price { grid-column: 1 / -1; color: var(--muted); font-size: .8rem; margin-top: .2rem; }
+
+    .empty-state { text-align: center; padding: 3rem 1.5rem; }
+    .empty-state .big { font-size: 2.5rem; }
+    .pager { display: flex; gap: .75rem; align-items: center; justify-content: center; margin: 2rem 0 .5rem; }
 </style>
 
-<h1>Cards</h1>
+<div class="page-head">
+    <div class="page-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/><rect x="14" y="15" width="7" height="6" rx="1.5"/></svg>
+    </div>
+    <div>
+        <h1>Card gallery</h1>
+        <p>Search your stock and see how your prices compare to market.</p>
+    </div>
+</div>
 
-<form method="get" class="filters">
-    <input type="search" name="q" value="@Model.Q" placeholder="Search name, set, or product ID" />
+<form method="get" class="filters panel" id="filters">
+    <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" class="form-control" name="q" value="@Model.Q" placeholder="Search name, set or product ID…" aria-label="Search cards" />
+    </div>
 
-    <select name="game">
+    <select name="game" class="form-select" aria-label="Game">
         <option value="">All games</option>
         @foreach (var g in Model.Games)
         {
@@ -40,7 +73,7 @@
         }
     </select>
 
-    <select name="setName">
+    <select name="setName" class="form-select" aria-label="Set">
         <option value="">All sets</option>
         @foreach (var s in Model.Sets)
         {
@@ -48,7 +81,7 @@
         }
     </select>
 
-    <select name="condition">
+    <select name="condition" class="form-select" aria-label="Condition">
         <option value="">Any condition</option>
         @foreach (var c in Model.Conditions)
         {
@@ -56,15 +89,15 @@
         }
     </select>
 
-    <select name="foil">
+    <select name="foil" class="form-select" aria-label="Foil">
         <option value="">Foil or not</option>
         <option value="yes" selected="@(Model.Foil == "yes")">Foil only</option>
         <option value="no" selected="@(Model.Foil == "no")">Non-foil only</option>
     </select>
 
-    <label><input type="checkbox" name="inStock" value="true" checked="@Model.InStock" /> In stock only</label>
+    <label class="check"><input type="checkbox" name="inStock" value="true" checked="@Model.InStock" /> In stock</label>
 
-    <select name="sort">
+    <select name="sort" class="form-select" aria-label="Sort by">
         <option value="name" selected="@(Model.Sort == "name")">Sort: name</option>
         <option value="set" selected="@(Model.Sort == "set")">Sort: set</option>
         <option value="price" selected="@(Model.Sort == "price")">Sort: market price</option>
@@ -72,18 +105,36 @@
         <option value="qty" selected="@(Model.Sort == "qty")">Sort: quantity</option>
     </select>
 
-    <button type="submit">Apply</button>
-    <a href="/Cards">Clear</a>
+    <button type="submit" class="btn-x primary small">Search</button>
+    @if (filtered)
+    {
+        <a class="btn-x ghost small" href="/Cards">Clear</a>
+    }
 </form>
 
-<p class="summary">
-    @Model.Total.ToString("N0") cards &middot; @Model.UnitsInView.ToString("N0") units &middot;
-    market value $@Model.ValueInView.ToString("N2")
-</p>
+<div class="summary">
+    <span class="chip accent">@Model.Total.ToString("N0") cards</span>
+    <span class="chip">@Model.UnitsInView.ToString("N0") units</span>
+    <span class="chip">Market value $@Model.ValueInView.ToString("N2")</span>
+</div>
 
 @if (Model.Tiles.Count == 0)
 {
-    <p>No cards match. Try fewer filters, or import your inventory on the <a href="/Import">Import</a> page.</p>
+    <div class="panel empty-state">
+        <div class="big" aria-hidden="true">🔍</div>
+        @if (filtered)
+        {
+            <h2>No cards match those filters</h2>
+            <p class="text-muted">Try fewer filters or a shorter search.</p>
+            <a class="btn-x ghost" href="/Cards">Clear filters</a>
+        }
+        else
+        {
+            <h2>Your gallery is empty</h2>
+            <p class="text-muted">Import your inventory and your cards will show up here.</p>
+            <a class="btn-x primary" href="/Import">Import inventory</a>
+        }
+    </div>
 }
 
 <div class="grid">
@@ -91,12 +142,12 @@
     {
         var img = CardShop.Web.Pages.CardsModel.ImageUrl(t.ProductId);
         string? diffText = null;
-        var diffClass = "";
+        var diffClass = "even";
         if (t.Market is { } mk && mk > 0 && t.YourPrice > 0)
         {
             var pct = (t.YourPrice - mk) / mk * 100;
             diffText = (pct >= 0 ? "+" : "") + pct.ToString("0.#") + "% vs market";
-            diffClass = pct > 0 ? "above" : pct < 0 ? "below" : "";
+            diffClass = pct > 0 ? "above" : pct < 0 ? "below" : "even";
         }
 
         <div class="tile">
@@ -107,19 +158,19 @@
                 }
                 @if (t.IsFoil)
                 {
-                    <span class="badge foil">Foil</span>
+                    <span class="tag foil">Foil</span>
                 }
-                <span class="badge qty">&times;@t.Qty</span>
+                <span class="tag qty">&times;@t.Qty</span>
             </div>
             <div class="meta">
                 <div class="name" title="@t.Name">@t.Name</div>
                 <div class="sub" title="@t.SetName">@t.SetName</div>
                 <div class="sub">@t.Condition</div>
                 <div class="prices">
-                    <span>Yours <strong>$@t.YourPrice.ToString("N2")</strong></span>
+                    <div><div class="k">Yours</div><div class="v">$@t.YourPrice.ToString("N2")</div></div>
                     @if (t.Market is { } m)
                     {
-                        <span>Market <strong>$@m.ToString("N2")</strong></span>
+                        <div><div class="k">Market</div><div class="v">$@m.ToString("N2")</div></div>
                         @if (diffText is not null)
                         {
                             <span class="diff @diffClass">@diffText</span>
@@ -127,7 +178,7 @@
                     }
                     else
                     {
-                        <span class="muted">No market price yet</span>
+                        <span class="no-price">No market price yet</span>
                     }
                 </div>
             </div>
@@ -137,9 +188,25 @@
 
 @if (Model.TotalPages > 1)
 {
-    <div class="pager">
-        @if (Model.PageNo > 1) { <a href="@Model.PageUrl(Model.PageNo - 1)">&larr; Previous</a> }
-        <span>Page @Model.PageNo of @Model.TotalPages</span>
-        @if (Model.PageNo < Model.TotalPages) { <a href="@Model.PageUrl(Model.PageNo + 1)">Next &rarr;</a> }
-    </div>
+    <nav class="pager" aria-label="Pages">
+        @if (Model.PageNo > 1) { <a class="btn-x ghost small" href="@Model.PageUrl(Model.PageNo - 1)">&larr; Previous</a> }
+        <span class="chip">Page @Model.PageNo of @Model.TotalPages</span>
+        @if (Model.PageNo < Model.TotalPages) { <a class="btn-x ghost small" href="@Model.PageUrl(Model.PageNo + 1)">Next &rarr;</a> }
+    </nav>
+}
+
+@section Scripts {
+    <script>
+        // Dropdowns and the in-stock box apply immediately; the search box applies on Enter or the Search button.
+        (function () {
+            var form = document.getElementById('filters');
+            form.querySelectorAll('select, input[type=checkbox]').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    // changing the game resets the set, since sets belong to a game
+                    if (el.name === 'game') form.querySelector('[name=setName]').value = '';
+                    form.submit();
+                });
+            });
+        })();
+    </script>
 }
